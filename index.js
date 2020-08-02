@@ -5,10 +5,32 @@ const { token, modlogChannelID } = require('./config.json')
 const command = require('./command-handler')
 
 client.on('ready', () => {
-    console.log('Discord Bot is ready!')
+    console.log(`Discord Bot ${client.user.username}#${client.user.discriminator} (${client.user.id}) is ready!`)
 
     command(client, ['ping', 'test'], message => {
         message.channel.send('pong')
+    })
+
+    command(client, ['cc', 'clear-channel'], message => {
+        const { content, member } = message
+
+        const tag = `<@${member.id}>`
+
+        if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('MANAGE_MESSAGES')) {
+            const arg = content.split(' ').slice(1).join('')
+
+            const limit = arg === '*' ? {}
+                : !isNaN(arg) && arg !== '' ? { limit: parseInt(arg) + 1 }
+                    : undefined
+
+            if (limit) {
+                message.channel.messages.fetch(limit).then(messages => {
+                    message.channel.bulkDelete(messages)
+                })
+            } else {
+                message.channel.send(`${tag} Please specify an amount or *`)
+            }
+        }
     })
 
     command(client, 'ban', message => {
@@ -63,7 +85,7 @@ client.on('ready', () => {
         const { member, guild, content } = message
 
         const args = content.split(' ').slice(1)
-        const target = args.slice(0, 1).join('')
+        const target = args.slice(0, 1).join('').replace('@', '')
         const reason = args.slice(1).join(' ') ? !undefined : 'No unban reason was given'
 
         const tag = `<@${member.id}>`
