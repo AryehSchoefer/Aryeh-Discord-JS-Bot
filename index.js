@@ -30,6 +30,27 @@ client.on('ready', () => {
             } else {
                 message.channel.send(`${tag} Please specify an amount or *`)
             }
+        } else {
+            message.channel.send(`${tag} You don't have permission to use this command.`)
+        }
+    })
+
+    command(client, 'status', message => {
+        const { content, member } = message
+
+        const tag = `<@${member.id}>`
+
+        if (member.hasPermission('ADMINISTRATOR')) {
+            const status = content.split(' ').slice(1).join(' ')
+
+            client.user.setPresence({
+                activity: {
+                    name: status,
+                    type: 0
+                }
+            })
+        } else {
+            message.channel.send(`${tag} You don't have permission to use this command.`)
         }
     })
 
@@ -128,9 +149,6 @@ client.on('ready', () => {
             message.channel.send(`${tag} You don't have permission to use this command.`)
         }
     })
-
-    // TODO: clear channel command
-
 })
 
 // Basic example: 
