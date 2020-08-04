@@ -5,153 +5,151 @@ const { token, modlogChannelID } = require('./config.json')
 const command = require('./command-handler')
 
 client.on('ready', () => {
-    console.log(`Discord Bot ${client.user.username}#${client.user.discriminator} (${client.user.id}) is ready!`)
+	console.log(`Discord Bot ${client.user.username}#${client.user.discriminator} (${client.user.id}) is ready!`)
 
-    command(client, ['ping', 'test'], message => {
-        message.channel.send('pong')
-    })
+	command(client, ['ping', 'test'], (message) => {
+		message.channel.send('pong')
+	})
 
-    command(client, ['cc', 'clear-channel'], message => {
-        const { content, member } = message
+	command(client, ['cc', 'clear-channel'], (message) => {
+		const { content, member } = message
 
-        const tag = `<@${member.id}>`
+		const tag = `<@${member.id}>`
 
-        if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('MANAGE_MESSAGES')) {
-            const arg = content.split(' ').slice(1).join('')
+		if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('MANAGE_MESSAGES')) {
+			const arg = content.split(' ').slice(1).join('')
 
-            const limit = arg === '*' ? {}
-                : !isNaN(arg) && arg !== '' ? { limit: parseInt(arg) + 1 }
-                    : undefined
+			const limit = arg === '*' ? {} : !isNaN(arg) && arg !== '' ? { limit: parseInt(arg) + 1 } : undefined
 
-            if (limit) {
-                message.channel.messages.fetch(limit).then(messages => {
-                    message.channel.bulkDelete(messages)
-                })
-            } else {
-                message.channel.send(`${tag} Please specify an amount or *`)
-            }
-        } else {
-            message.channel.send(`${tag} You don't have permission to use this command.`)
-        }
-    })
+			if (limit) {
+				message.channel.messages.fetch(limit).then((messages) => {
+					message.channel.bulkDelete(messages)
+				})
+			} else {
+				message.channel.send(`${tag} Please specify an amount or *`)
+			}
+		} else {
+			message.channel.send(`${tag} You don't have permission to use this command.`)
+		}
+	})
 
-    command(client, 'status', message => {
-        const { content, member } = message
+	command(client, 'status', (message) => {
+		const { content, member } = message
 
-        const tag = `<@${member.id}>`
+		const tag = `<@${member.id}>`
 
-        if (member.hasPermission('ADMINISTRATOR')) {
-            const status = content.split(' ').slice(1).join(' ')
+		if (member.hasPermission('ADMINISTRATOR')) {
+			const status = content.split(' ').slice(1).join(' ')
 
-            client.user.setPresence({
-                activity: {
-                    name: status,
-                    type: 0
-                }
-            })
-        } else {
-            message.channel.send(`${tag} You don't have permission to use this command.`)
-        }
-    })
+			client.user.setPresence({
+				activity: {
+					name: status,
+					type: 0,
+				},
+			})
+		} else {
+			message.channel.send(`${tag} You don't have permission to use this command.`)
+		}
+	})
 
-    command(client, 'ban', message => {
-        const { member, mentions, guild, content, author } = message
+	command(client, 'ban', (message) => {
+		const { member, mentions, guild, content, author } = message
 
-        const tag = `<@${member.id}>`
+		const tag = `<@${member.id}>`
 
-        if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('BAN_MEMBERS')) {
-            const target = mentions.users.first()
-            const reasonArg = content.split(' ').slice(2).join(' ')
-            const reason = reasonArg ? reasonArg : 'No ban reason was given'
+		if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('BAN_MEMBERS')) {
+			const target = mentions.users.first()
+			const reasonArg = content.split(' ').slice(2).join(' ')
+			const reason = reasonArg ? reasonArg : 'No ban reason was given'
 
-            if (target) {
-                const targetMember = guild.member(target.id)
-                targetMember.ban().catch(err => {
-                    message.channel.send('Unable to ban member')
-                    console.error(err)
-                })
-                // TODO: put this in a seperate file
-                const banConfirmationEmbed = new Discord.MessageEmbed()
-                    .setColor('RED')
-                    .setDescription(`🔒 ${target} has been successfully banned!`)
-                message.channel.send({
-                    embed: banConfirmationEmbed
-                })
+			if (target) {
+				const targetMember = guild.member(target.id)
+				targetMember.ban().catch((err) => {
+					message.channel.send('Unable to ban member')
+					console.error(err)
+				})
+				// TODO: put this in a seperate file
+				const banConfirmationEmbed = new Discord.MessageEmbed()
+					.setColor('RED')
+					.setDescription(`🔒 ${target} has been successfully banned!`)
+				message.channel.send({
+					embed: banConfirmationEmbed,
+				})
 
-                // const modlogChannelID = 'YOUR ID HERE (IF U DON\'T USE A CONFIG VAR)'
-                const modlogChannel = guild.channels.cache.get(modlogChannelID)
+				// const modlogChannelID = 'YOUR ID HERE (IF U DON\'T USE A CONFIG VAR)'
+				const modlogChannel = guild.channels.cache.get(modlogChannelID)
 
-                const banConfirmationEmbedModlog = new Discord.MessageEmbed()
-                    .setAuthor(`Banned by ${author.username}#${author.discriminator}`, author.displayAvatarURL())
-                    .setThumbnail(target.displayAvatarURL())
-                    .setColor('RED')
-                    .setTimestamp()
-                    .setDescription(
-                        `**Action**: Ban
+				const banConfirmationEmbedModlog = new Discord.MessageEmbed()
+					.setAuthor(`Banned by ${author.username}#${author.discriminator}`, author.displayAvatarURL())
+					.setThumbnail(target.displayAvatarURL())
+					.setColor('RED')
+					.setTimestamp()
+					.setDescription(
+						`**Action**: Ban
                         **User**: ${target.username}#${target.discriminator} (${target.id})
                         **Reason**: ${reason}`
-                    )
-                modlogChannel.send({
-                    embed: banConfirmationEmbedModlog
-                })
-            } else {
-                message.channel.send(`${tag} Please specify a user.`)
-            }
-        } else {
-            message.channel.send(`${tag} You don't have permission to use this command.`)
-        }
-    })
+					)
+				modlogChannel.send({
+					embed: banConfirmationEmbedModlog,
+				})
+			} else {
+				message.channel.send(`${tag} Please specify a user.`)
+			}
+		} else {
+			message.channel.send(`${tag} You don't have permission to use this command.`)
+		}
+	})
 
-    command(client, 'unban', message => {
-        const { member, guild, content } = message
+	command(client, 'unban', (message) => {
+		const { member, guild, content } = message
 
-        const args = content.split(' ').slice(1)
-        const target = args.slice(0, 1).join('').replace('@', '')
-        const reason = args.slice(1).join(' ') ? !undefined : 'No unban reason was given'
+		const args = content.split(' ').slice(1)
+		const target = args.slice(0, 1).join('').replace('@', '')
 
-        const tag = `<@${member.id}>`
+		// fix this shit
+		const reason = args.slice(1).join(' ') ? !undefined : 'No unban reason was given'
 
-        if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('BAN_MEMBERS')) {
-            guild.fetchBans().then(bans => {
-                if (bans.some(ban => target === ban.user.id)) {
-                    guild.members.unban(target, reason)
+		const tag = `<@${member.id}>`
 
-                } else if (bans.some(ban => target === ban.user.username)) {
-                    const targetInfo = bans.find(ban => target === ban.user.username)
-                    guild.members.unban(targetInfo.user.id, reason)
+		if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('BAN_MEMBERS')) {
+			guild.fetchBans().then((bans) => {
+				if (bans.some((ban) => target === ban.user.id)) {
+					guild.members.unban(target, reason)
+				} else if (bans.some((ban) => target === ban.user.username)) {
+					const targetInfo = bans.find((ban) => target === ban.user.username)
+					guild.members.unban(targetInfo.user.id, reason)
+				} else {
+					message.channel.send(`${tag} User isn't banned.`)
+				}
+			})
+		} else {
+			message.channel.send(`${tag} You don't have permission to use this command.`)
+		}
+	})
 
-                } else {
-                    message.channel.send(`${tag} User isn't banned.`)
-                }
-            })
-        } else {
-            message.channel.send(`${tag} You don't have permission to use this command.`)
-        }
-    })
+	command(client, 'kick', (message) => {
+		const { member, mentions, guild } = message
 
-    command(client, 'kick', message => {
-        const { member, mentions, guild } = message
+		const tag = `<@${member.id}>`
 
-        const tag = `<@${member.id}>`
-
-        if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('KICK_MEMBERS')) {
-            const target = mentions.users.first()
-            if (target) {
-                const targetMember = guild.member(target.id)
-                targetMember.kick().catch(err => {
-                    message.channel.send('Unable to kick member')
-                    console.error(err)
-                })
-            } else {
-                message.channel.send(`${tag} Please specify a user.`)
-            }
-        } else {
-            message.channel.send(`${tag} You don't have permission to use this command.`)
-        }
-    })
+		if (member.hasPermission('ADMINISTRATOR') || member.hasPermission('KICK_MEMBERS')) {
+			const target = mentions.users.first()
+			if (target) {
+				const targetMember = guild.member(target.id)
+				targetMember.kick().catch((err) => {
+					message.channel.send('Unable to kick member')
+					console.error(err)
+				})
+			} else {
+				message.channel.send(`${tag} Please specify a user.`)
+			}
+		} else {
+			message.channel.send(`${tag} You don't have permission to use this command.`)
+		}
+	})
 })
 
-// Basic example: 
+// Basic example:
 // client.on('message', message => {
 //     if (message.content === 'ping') {
 //         message.channel.send('pong')
